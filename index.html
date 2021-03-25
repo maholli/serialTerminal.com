@@ -2,7 +2,7 @@
     * {
         background-color: #352e2e;
         font-family: monospace;
-        color: rgb(60, 255, 1);
+        color: rgb(60, 255, 60);
         padding: 0px;
     }
 
@@ -58,20 +58,23 @@ Baud:
 <button onclick="serialResultsDiv.innerHTML = '';">Clear</button>
 
 <br>
-<input type="text" id="lineToSend" style="width:calc(100% - 60px)">
+<input type="text" id="lineToSend" style="width:calc(50% - 60px)">
 <button onclick="sendSerialLine()" style="width:45px">Send</button>
+<br>
+CircuitPython Commands:
+<button onclick="sendCtrlChar(3)" style="width:45px">Halt</button>
+<button onclick="sendCtrlChar(4)" style="width:65px">Restart</button>
+<button onclick="sendCtrlChar(5)" style="width:85px">Paste Mode</button>
 
-
+<br>
+<div id="serialResults">
+<br>
+</div>
 <input type="checkbox" id="addLine" onclick="localStorage.addLine = this.checked;" checked>
 <label for="addLine">send with /r/n</label>
 
 <input type="checkbox" id="echoOn" onclick="localStorage.echoOn = this.checked;" checked>
 <label for="echoOn">echo</label>
-
-
-<br>
-<div id="serialResults">
-</div>
 
 <script>
     var port, textEncoder, writableStreamClosed, writer;
@@ -95,6 +98,10 @@ Baud:
     async function sendSerialLine() {
         dataToSend = document.getElementById("lineToSend").value;
         console.log(dataToSend);
+        // if (document.getElementById("ctrlC").checked == true){
+        //     dataToSend = "\x03";
+        //     document.getElementById("ctrlC").checked = false;
+        // }
         if (document.getElementById("addLine").checked == true) dataToSend = dataToSend + "\r\n";
         if (document.getElementById("echoOn").checked == true) appendToTerminal("> " + dataToSend);
         console.log(dataToSend);
@@ -102,6 +109,13 @@ Baud:
         document.getElementById("lineToSend").value = "";
         //await writer.releaseLock();
     }
+
+async function sendCtrlChar(ctrlChar) {
+    if (ctrlChar == 3) dataToSend = "\x03"; //ctrl+C
+    if (ctrlChar == 4) dataToSend = "\x04"; //ctrl+D
+    if (ctrlChar == 5) dataToSend = "\x05"; //ctrl+D
+    await writer.write(dataToSend);
+}
 
     async function listenToPort() {
         const textDecoder = new TextDecoderStream();
@@ -135,7 +149,7 @@ Baud:
         }
     })
 
-    document.getElementById("baud").value = (localStorage.baud == undefined ? 9600 : localStorage.baud);
+    document.getElementById("baud").value = (localStorage.baud == undefined ? 115200 : localStorage.baud);
     document.getElementById("addLine").checked = (localStorage.addLine == "false" ? false : true);
     document.getElementById("echoOn").checked = (localStorage.echoOn == "false" ? false : true);
 
